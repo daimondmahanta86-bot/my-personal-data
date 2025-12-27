@@ -1,92 +1,417 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Mera Personal Data App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background-color: #f0f2f5; }
-        h2 { color: #333; text-align: center; }
-        textarea { 
-            width: 100%; height: 200px; padding: 15px; font-size: 16px; 
-            border: 1px solid #ccc; border-radius: 8px; resize: none;
-            font-family: inherit; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        button { 
-            display: block; width: 100%; margin-top: 15px; padding: 12px; 
-            font-size: 18px; font-weight: bold; cursor: pointer; 
-            background-color: #007bff; color: white; border: none; border-radius: 8px; 
-            transition: background 0.3s;
-        }
-        button:hover { background-color: #0056b3; }
-        #status { text-align: center; margin-top: 15px; font-weight: bold; min-height: 20px; }
-    </style>
-</head>
-<body>
-
-    <h2>📝 Mera Safe Data</h2>
-    
-    <textarea id="myInput" placeholder="Data load ho raha hai..."></textarea>
-    
-    <button onclick="saveData()">Update & Save Data</button>
-    
-    <p id="status"></p>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daimond's Divine Planner (Secure)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <script>
-        // ----------------------------------------------------
-        // AAPKA PERSONAL CONFIG CODE (Maine image se le liya hai)
-        // ----------------------------------------------------
-        var firebaseConfig = {
-            apiKey: "AIzaSyCLD87imksmQI2uENX4PVRDcnun3WxTdbk",
-            authDomain: "mera-personal-data.firebaseapp.com",
-            databaseURL: "https://mera-personal-data-default-rtdb.firebaseio.com",
-            projectId: "mera-personal-data",
-            storageBucket: "mera-personal-data.firebasestorage.app",
-            messagingSenderId: "304579476606",
-            appId: "1:304579476606:web:8fa78fee9cbe2f301f2c2f"
-        };
-        // ----------------------------------------------------
-
-        // Firebase Start Karna
-        firebase.initializeApp(firebaseConfig);
-        var database = firebase.database();
-
-        // 1. PAGE KHULTE HI DATA LANA (Read)
-        var dataRef = database.ref('mera_text');
+    
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root { --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e); --container-bg: rgba(20, 20, 40, 0.95); --text-color: #e0e0e0; --gold-accent: #ffd700; --saffron: #ff9933; --peacock-green: #00ffcc; --mistake-red: #ff4d4d; --border-color: #444; --profit-green: #2ecc71; --slot-bg: rgba(255,255,255,0.02); --slot-hover: rgba(255,255,255,0.08); --detail-btn-color: #aaa; }
+        body.theme-warzone { --bg-gradient: linear-gradient(135deg, #000000, #1a0505, #2c0000); --container-bg: rgba(20, 0, 0, 0.95); --gold-accent: #ff4d4d; --peacock-green: #ff9f43; --text-color: #e0e0e0; --border-color: #550000; }
+        body.theme-matrix { --bg-gradient: linear-gradient(135deg, #000000, #0a1a0a, #001100); --container-bg: rgba(0, 20, 0, 0.95); --gold-accent: #00ff00; --peacock-green: #00ff00; --mistake-red: #ff0055; --text-color: #00dd00; --border-color: #004400; }
+        body.theme-zen { --bg-gradient: linear-gradient(135deg, #f5f7fa, #c3cfe2); --container-bg: rgba(255, 255, 255, 0.95); --text-color: #333; --gold-accent: #2980b9; --peacock-green: #27ae60; --border-color: #ccc; --slot-bg: rgba(0,0,0,0.02); --slot-hover: rgba(0,0,0,0.05); --detail-btn-color: #555; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-gradient); background-attachment: fixed; margin: 0; padding: 20px; color: var(--text-color); min-height: 100vh; overflow-x: hidden; transition: background 0.5s ease; }
+        .container { max-width: 1100px; margin: 0 auto; background: var(--container-bg); padding: 30px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.5), 0 0 10px var(--gold-accent); border: 1px solid var(--gold-accent); backdrop-filter: blur(10px); transition: all 0.5s ease; }
         
-        dataRef.on('value', (snapshot) => {
-            var data = snapshot.val();
-            if(data) {
-                document.getElementById('myInput').value = data;
-                document.getElementById('status').style.color = "blue";
-                document.getElementById('status').innerText = "Cloud se data aa gaya!";
-            } else {
-                document.getElementById('myInput').placeholder = "Yahan kuch likhein aur Save dabayein...";
-                document.getElementById('status').innerText = "";
-            }
-        });
+        /* LOGIN SCREEN STYLES */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--gold-accent); }
+        #login-box { border: 2px solid var(--gold-accent); padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); background: rgba(20,20,20,0.9); }
+        .login-input { font-size: 24px; padding: 10px; text-align: center; border-radius: 10px; border: 1px solid #555; background: #222; color: white; margin-top: 20px; letter-spacing: 5px; width: 200px; }
+        .login-btn { margin-top: 20px; padding: 10px 30px; font-size: 18px; background: var(--gold-accent); color: black; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .login-btn:hover { background: white; box-shadow: 0 0 20px white; }
 
-        // 2. BUTTON DABANE PAR DATA SAVE KARNA (Write)
-        function saveData() {
-            var text = document.getElementById('myInput').value;
-            document.getElementById('status').innerText = "Saving...";
-            
-            dataRef.set(text, (error) => {
-                if (error) {
-                    alert("Galti ho gayi: " + error.message);
-                } else {
-                    document.getElementById('status').style.color = "green";
-                    document.getElementById('status').innerText = "✅ Data Save Ho Gaya!";
-                    
-                    // 3 second baad message hata do
-                    setTimeout(() => { 
-                        document.getElementById('status').innerText = ""; 
-                    }, 3000);
-                }
-            });
+        /* HEADER & UI */
+        header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--gold-accent); padding-bottom: 20px; position: relative; }
+        .user-name { font-size: 1.4rem; color: var(--peacock-green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; text-shadow: 0 0 10px rgba(0, 255, 204, 0.3); }
+        .odia-quote { color: var(--gold-accent); font-size: 1.6rem; font-weight: bold; text-shadow: 0 0 5px rgba(255, 215, 0, 0.2); margin-bottom: 10px; }
+        .eng-subtitle { color: var(--text-color); opacity: 0.7; font-style: italic; font-size: 0.9rem; }
+        .rank-badge { position: absolute; right: 0; top: 0; background: rgba(255, 215, 0, 0.1); border: 1px solid var(--gold-accent); padding: 5px 15px; border-radius: 20px; font-weight: bold; color: var(--gold-accent); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
+        
+        /* CONTROLS */
+        .top-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .date-nav { display: flex; align-items: center; gap: 10px; }
+        .btn { background: transparent; color: var(--gold-accent); border: 1px solid var(--gold-accent); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .btn:hover { background: var(--gold-accent); color: var(--container-bg); }
+        .btn-yes { border-color: var(--peacock-green); color: var(--peacock-green); padding: 5px 15px; margin: 0 5px; }
+        .btn-yes:hover { background: var(--peacock-green); color: black; box-shadow: 0 0 10px var(--peacock-green); }
+        .btn-no { border-color: var(--mistake-red); color: var(--mistake-red); padding: 5px 15px; margin: 0 5px; }
+        .btn-no:hover { background: var(--mistake-red); color: white; box-shadow: 0 0 10px var(--mistake-red); }
+        input[type="date"] { background: rgba(255,255,255,0.1); color: var(--text-color); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 5px; }
+
+        /* DASHBOARD GRID */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+        .score-board, .pnl-board, .brahmacharya-board, .screen-time-board { text-align: center; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; }
+        .pnl-board, .screen-time-board { flex-direction: column; gap: 5px; }
+        .pnl-board { border-color: var(--peacock-green); }
+        
+        /* RESULT STAMP LOGIC */
+        .result-stamp { border: 3px double; padding: 5px 10px; transform: rotate(-5deg); font-weight: 900; letter-spacing: 2px; font-size: 1.4rem; text-transform: uppercase; transition: all 0.3s ease; display: inline-block; }
+        .stamp-pass { color: var(--profit-green); border-color: var(--profit-green); text-shadow: 0 0 10px var(--profit-green); }
+        .stamp-fail { color: var(--mistake-red); border-color: var(--mistake-red); text-shadow: 0 0 10px var(--mistake-red); }
+        .stamp-neutral { color: #555; border-color: #555; }
+
+        .streak-val { font-size: 2.2rem; font-weight: bold; color: var(--saffron); text-shadow: 0 0 10px rgba(255, 153, 51, 0.3); }
+        .score-val { font-size: 2rem; font-weight: bold; color: var(--peacock-green); }
+        .score-label { font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .pnl-input { background: transparent; border: none; border-bottom: 2px solid var(--border-color); color: var(--text-color); font-size: 1.2rem; text-align: center; width: 80%; }
+        .mindset-select { background: rgba(0,0,0,0.2); color: var(--text-color); border: 1px solid var(--border-color); padding: 5px; border-radius: 5px; width: 90%; }
+        
+        /* SCHEDULE */
+        .schedule-grid { border: 1px solid var(--border-color); margin-bottom: 30px; display: flex; flex-direction: column; }
+        .time-slot { display: flex; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--slot-bg); padding-right: 10px; position: relative; }
+        .time-slot:hover { background: var(--slot-hover); }
+        .time-label { flex: 0 0 85px; padding: 10px; color: var(--gold-accent); border-right: 1px solid var(--border-color); text-align: center; font-size: 0.85rem; font-weight: bold; }
+        .cat-select { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; margin-right: 5px; padding: 5px; width: 50px; }
+        .task-input { flex: 1; border: none; padding: 12px; background: transparent; color: var(--text-color); font-size: 1rem; outline: none; }
+        .task-done { text-decoration: line-through; opacity: 0.6; }
+        .action-group { display: flex; align-items: center; gap: 8px; }
+        .done-click-btn { background: transparent; border: 1px solid var(--peacock-green); color: var(--peacock-green); border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-checked { background: var(--peacock-green); color: black; }
+        input[type="checkbox"] { display: none; }
+        
+        /* MISTAKES */
+        .reflections { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 2px dashed var(--border-color); padding-top: 20px; }
+        .reflection-box { background: rgba(0, 0, 0, 0.2); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .full-width { grid-column: span 2; }
+        textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-color); padding: 10px; min-height: 80px; border-radius: 5px; }
+        .mistake-controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;}
+        .mistake-select { background: rgba(0,0,0,0.3); color: var(--text-color); border: 1px solid var(--border-color); padding: 5px; border-radius: 5px; }
+        .mistake-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-color); padding: 8px; border-radius: 5px; min-width: 150px; }
+        .btn-add-mistake { background: var(--mistake-red); color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #mistake-list { margin-top: 10px; max-height: 200px; overflow-y: auto; }
+        .mistake-item { background: rgba(255,255,255,0.05); padding: 8px; margin-bottom: 5px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #555; }
+        .mistake-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; color: #000; font-weight: bold; margin-right: 8px; text-transform: uppercase;}
+        .tag-critical { background: var(--mistake-red); } .tag-medium { background: #ff9f43; } .tag-minor { background: #feca57; }
+        .btn-delete { background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        .modal-content { max-width: 1000px; margin: 0 auto; background: var(--container-bg); padding: 30px; border-radius: 15px; border: 1px solid var(--peacock-green); color: var(--text-color); }
+        .close-btn { float: right; font-size: 2rem; cursor: pointer; color: var(--mistake-red); }
+        
+        /* CLOUD STATUS */
+        #cloud-status { position: fixed; bottom: 10px; right: 10px; font-size: 12px; color: #aaa; z-index: 2000; background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 20px; }
+        @media print { #login-screen, .top-controls, .modal, .dashboard-grid { display: none !important; } .container { background: white; color: black; } }
+    </style>
+</head>
+<body class="">
+
+<div id="login-screen">
+    <div id="login-box">
+        <h1 style="color: var(--gold-accent); margin-bottom: 0;">🔒 RESTRICTED AREA</h1>
+        <p style="color: #aaa; font-style: italic;">Commander Access Only</p>
+        <input type="password" id="login-pass" class="login-input" placeholder="CODE">
+        <br>
+        <button class="login-btn" onclick="checkLogin()">ACCESS TERMINAL</button>
+        <p id="login-msg" style="color: red; margin-top: 10px; height: 20px;"></p>
+    </div>
+</div>
+
+<div id="cloud-status">☁️ Connecting...</div>
+<div id="trader-rank" class="rank-badge" style="color: #aaa; border-color: #aaa;">🔰 Novice Trader</div>
+
+<div class="container">
+    <header>
+        <div class="user-name">👤 Commander: Daimond Mahanta</div>
+        <div class="odia-quote">ଜୀବନ ଏକ ଯୁଦ୍ଧ ଆଉ ଏହି ଯୁଦ୍ଧର ରାଜା ମୁଁ</div>
+        <div class="eng-subtitle">"Life is a war and I am the king of this war."</div>
+    </header>
+
+    <div class="top-controls">
+        <div class="date-nav">
+            <button class="btn" onclick="changeDate(-1)">❮</button>
+            <input type="date" id="date-picker" onchange="loadDate(this.value)">
+            <button class="btn" onclick="changeDate(1)">❯</button>
+        </div>
+        <div>
+            <button class="btn" onclick="window.print()">🖨️ Print</button>
+            <button class="btn" onclick="init()">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="score-board">
+            <div><div class="score-label">Result</div><div id="day-result-badge" class="result-stamp stamp-neutral">N/A</div></div>
+            <div><div class="score-label">Karma Score</div><div id="daily-score" class="score-val">0%</div></div>
+            <div><div class="score-label">Tasks Done</div><div id="task-count" class="score-val" style="font-size: 1.5rem; color:var(--text-color);">0/0</div></div>
+            <div><div class="score-label" style="color:var(--mistake-red)">Errors</div><div id="dash-critical-count" class="score-val" style="font-size: 1.5rem; color:var(--mistake-red)">0</div></div>
+        </div>
+        
+        <div class="brahmacharya-board" id="brahmacharya-box" style="border-color: var(--saffron);">
+            <div class="streak-val" id="brahmacharya-streak">0</div>
+            <div class="streak-label">🛡️ Days of Brahmacharya</div>
+            <div id="brahmacharya-actions" style="margin-top: 10px;">
+                <button class="btn btn-yes" onclick="confirmBrahmacharya(true)">✅ Yes</button>
+                <button class="btn btn-no" onclick="confirmBrahmacharya(false)">❌ No</button>
+            </div>
+            <div id="brahmacharya-status" style="display: none; font-weight: bold; margin-top: 5px;"></div>
+        </div>
+
+        <div class="pnl-board">
+            <div class="score-label">Daily P&L (₹)</div>
+            <input type="number" id="daily-pnl" class="pnl-input" placeholder="0.00" onchange="savePnL()">
+            <select id="daily-mindset" class="mindset-select" onchange="savePnL()">
+                <option value="">Mindset?</option>
+                <option value="calm">🧘 Calm</option>
+                <option value="fomo">😨 FOMO (FAIL)</option>
+                <option value="greed">🤑 Greed (FAIL)</option>
+                <option value="revenge">😡 Revenge (FAIL)</option>
+                <option value="fear">🥶 Fear</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="schedule-container" class="schedule-grid"></div>
+
+    <div class="reflections">
+        <div class="reflection-box">
+            <span class="reflection-title" style="color:var(--mistake-red)">⚠️ Tactical Errors Log</span>
+            <div class="mistake-controls">
+                <select id="mistake-severity" class="mistake-select"><option value="critical">🔴 Critical (FAIL)</option><option value="medium">🟠 Medium</option><option value="minor">🟡 Minor</option></select>
+                <input type="text" id="mistake-desc" class="mistake-input" placeholder="Mistake Name...">
+                <button class="btn-add-mistake" onclick="addMistake()">Add Log</button>
+            </div>
+            <div id="mistake-list"></div>
+        </div>
+        <div class="reflection-box full-width">
+            <span class="reflection-title">💡 War Room Debrief</span>
+            <textarea id="learning" oninput="saveReflection('learning')"></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- LOGIN LOGIC ---
+    function checkLogin() {
+        const pass = document.getElementById('login-pass').value;
+        const msg = document.getElementById('login-msg');
+        
+        // DEFAULT PASSWORD IS '1234'
+        if(pass === "1234") {
+            document.getElementById('login-screen').style.display = 'none';
+            // Play sound effect (optional)
+            const ctx = new (window.AudioContext||window.webkitAudioContext)();
+            const o = ctx.createOscillator(); o.frequency.value = 800; o.connect(ctx.destination);
+            o.start(); o.stop(ctx.currentTime+0.1);
+        } else {
+            msg.innerText = "ACCESS DENIED";
+            document.getElementById('login-box').style.borderColor = "red";
+            setTimeout(() => { document.getElementById('login-box').style.borderColor = "var(--gold-accent)"; }, 500);
         }
-    </script>
+    }
+    // Press Enter to Login
+    document.getElementById('login-pass').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkLogin();
+    });
+
+    // --- FIREBASE CONFIG ---
+    var firebaseConfig = {
+        apiKey: "AIzaSyCLD87imksmqI2uENX4PVRDcnun3WxTdbk",
+        authDomain: "mera-personal-data.firebaseapp.com",
+        databaseURL: "https://mera-personal-data-default-rtdb.firebaseio.com",
+        projectId: "mera-personal-data",
+        storageBucket: "mera-personal-data.firebasestorage.app",
+        messagingSenderId: "304579476606",
+        appId: "1:304579476606:web:8fa78fee9cbe2f301f2c2f"
+    };
+
+    let dbRef;
+    let isCloudActive = false;
+    const statusEl = document.getElementById('cloud-status');
+
+    function initFirebase() {
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            dbRef = firebase.database().ref('divine_planner_data'); 
+            statusEl.innerText = "☁️ Connected";
+            statusEl.style.color = "var(--peacock-green)";
+
+            const originalSetItem = localStorage.setItem;
+            localStorage.setItem = function(key, value) {
+                originalSetItem.apply(this, arguments);
+                if (isCloudActive) dbRef.child(key).set(value).catch(err => console.error(err));
+            };
+
+            const originalRemoveItem = localStorage.removeItem;
+            localStorage.removeItem = function(key) {
+                originalRemoveItem.apply(this, arguments);
+                if (isCloudActive) dbRef.child(key).remove().catch(err => console.error(err));
+            };
+
+            dbRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        originalSetItem.call(localStorage, key, data[key]);
+                    });
+                }
+                isCloudActive = true;
+                init(); 
+            });
+
+        } catch (e) {
+            console.error(e);
+            init();
+        }
+    }
+
+    // --- APP LOGIC ---
+    let currentDate = new Date();
+    const categories = { 'work': {emoji:'💼', label:'Trade'}, 'study':{emoji:'📚', label:'Study'}, 'health':{emoji:'💪', label:'Gym'}, 'spiritual':{emoji:'🕉️', label:'Puja'} };
+
+    function init() {
+        document.getElementById('date-picker').value = formatDateKey(currentDate);
+        refreshView(); 
+        updateBrahmacharyaUI();
+    }
+    
+    function formatDateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function changeDate(d) { currentDate.setDate(currentDate.getDate()+d); document.getElementById('date-picker').value=formatDateKey(currentDate); refreshView(); updateBrahmacharyaUI(); }
+    function loadDate(d) { if(!d)return; currentDate=new Date(d); refreshView(); updateBrahmacharyaUI(); }
+    
+    function refreshView() { 
+        renderSchedule(); 
+        loadReflections(); 
+        renderMistakes(); 
+        loadPnL(); 
+        calculateScore(); 
+    }
+
+    function renderSchedule() {
+        const c = document.getElementById('schedule-container'); c.innerHTML = '';
+        const dk = formatDateKey(currentDate);
+        for(let t=0; t<24*60; t+=30) {
+            let h=Math.floor(t/60), m=t%60;
+            let ts = `${h%12||12}:${m<10?'0'+m:m} ${h>=12?'PM':'AM'}`;
+            let sid = `task_${dk}_${h}-${m}`;
+            let cid = `check_${dk}_${h}-${m}`;
+            let catid = `cat_${dk}_${h}-${m}`;
+            
+            const r = document.createElement('div'); r.className='time-slot';
+            const chk = document.createElement('input'); chk.type='checkbox'; chk.id=cid; chk.checked=localStorage.getItem(cid)==='true';
+            
+            const sel = document.createElement('select'); sel.className='cat-select';
+            for(const[k,v] of Object.entries(categories)) { const o=document.createElement('option'); o.value=k; o.textContent=v.emoji; sel.appendChild(o); }
+            sel.value = localStorage.getItem(catid) || 'work';
+            sel.onchange=(e)=>localStorage.setItem(catid, e.target.value);
+
+            const inp = document.createElement('input'); inp.type='text'; inp.className='task-input '+(chk.checked?'task-done':''); inp.value=localStorage.getItem(sid)||'';
+            inp.oninput=(e)=>{localStorage.setItem(sid,e.target.value); calculateScore();};
+
+            const acts = document.createElement('div'); acts.className='action-group';
+            const btnChk = document.createElement('button'); btnChk.className='done-click-btn '+(chk.checked?'btn-checked':''); btnChk.innerHTML=chk.checked?'✓':'';
+            btnChk.onclick=()=>{
+                chk.checked=!chk.checked; localStorage.setItem(cid, chk.checked);
+                inp.className='task-input '+(chk.checked?'task-done':''); btnChk.className='done-click-btn '+(chk.checked?'btn-checked':''); btnChk.innerHTML=chk.checked?'✓':'';
+                calculateScore();
+            };
+            
+            acts.append(btnChk);
+            r.append(createEl('div','time-label',ts), chk, sel, inp, acts);
+            c.appendChild(r);
+        }
+    }
+    function createEl(tag,cls,txt){const e=document.createElement(tag);e.className=cls;e.textContent=txt;return e;}
+
+    // --- RESTORED RESULTS LOGIC ---
+    function calculateScore(){
+        const dk = formatDateKey(currentDate); 
+        let t=0, c=0;
+        
+        // 1. Count Tasks
+        for(let i=0; i<24*60; i+=30){
+            let h=Math.floor(i/60), m=i%60;
+            if(localStorage.getItem(`task_${dk}_${h}-${m}`)?.trim()) { 
+                t++; 
+                if(localStorage.getItem(`check_${dk}_${h}-${m}`)==='true') c++; 
+            }
+        }
+        
+        // 2. Calculate Percentage
+        const sc = t ? Math.round((c/t)*100) : 0;
+        document.getElementById('daily-score').textContent = sc+"%"; 
+        localStorage.setItem(`score_${dk}`, sc);
+        document.getElementById('task-count').textContent = `${c}/${t}`;
+        
+        // 3. Logic for PASS/FAIL
+        const badge = document.getElementById('day-result-badge');
+        const mindset = document.getElementById('daily-mindset').value;
+        const mistakes = JSON.parse(localStorage.getItem(getMistakeKey())||"[]");
+        const criticalCount = mistakes.filter(m => m.severity === 'critical').length;
+        document.getElementById('dash-critical-count').textContent = mistakes.length;
+
+        // --- RULES ---
+        let result = "NEUTRAL";
+        
+        // If there's activity (Tasks or P&L logged)
+        if(t > 0 || document.getElementById('daily-pnl').value) {
+            result = "PASS";
+            // Failure Conditions
+            if (criticalCount > 0) result = "FAIL"; // Mistake Critical
+            if (['fomo', 'greed', 'revenge'].includes(mindset)) result = "FAIL"; // Mindset Bad
+            if (t > 0 && sc < 60) result = "FAIL"; // Score below 60%
+        } else {
+            result = "N/A";
+        }
+
+        // Apply UI
+        badge.innerText = result;
+        if(result === "PASS") badge.className = "result-stamp stamp-pass";
+        else if(result === "FAIL") badge.className = "result-stamp stamp-fail";
+        else badge.className = "result-stamp stamp-neutral";
+    }
+
+    function savePnL(){ const k=formatDateKey(currentDate); localStorage.setItem('pnl_'+k, document.getElementById('daily-pnl').value); localStorage.setItem('mindset_'+k, document.getElementById('daily-mindset').value); calculateScore(); }
+    function loadPnL(){ const k=formatDateKey(currentDate); document.getElementById('daily-pnl').value=localStorage.getItem('pnl_'+k)||''; document.getElementById('daily-mindset').value=localStorage.getItem('mindset_'+k)||''; }
+
+    function getMistakeKey(){return 'mistakes_'+formatDateKey(currentDate);}
+    function addMistake(){
+        const k=getMistakeKey(); const l=JSON.parse(localStorage.getItem(k)||"[]");
+        l.push({id:Date.now(), severity:document.getElementById('mistake-severity').value, desc:document.getElementById('mistake-desc').value});
+        localStorage.setItem(k, JSON.stringify(l)); renderMistakes(); calculateScore();
+    }
+    function renderMistakes(){
+        const l=document.getElementById('mistake-list'); l.innerHTML='';
+        JSON.parse(localStorage.getItem(getMistakeKey())||"[]").forEach(m=>{
+            const d=document.createElement('div'); d.className=`mistake-item`;
+            d.innerHTML=`<div><span class="mistake-tag tag-${m.severity}">${m.severity}</span> ${m.desc}</div><button class="btn-delete" onclick="delMistake(${m.id})">×</button>`;
+            l.appendChild(d);
+        });
+    }
+    function delMistake(id){
+        const k=getMistakeKey(); const l=JSON.parse(localStorage.getItem(k)||"[]").filter(m=>m.id!==id);
+        localStorage.setItem(k, JSON.stringify(l)); renderMistakes(); calculateScore();
+    }
+
+    function updateBrahmacharyaUI() {
+        const start = localStorage.getItem('brahmacharya_start');
+        let streak = 0;
+        if(start) streak = Math.floor((new Date() - new Date(start))/(1000*60*60*24));
+        document.getElementById('brahmacharya-streak').textContent = streak;
+        const chk = localStorage.getItem('brahmacharya_check_'+formatDateKey(currentDate));
+        const act = document.getElementById('brahmacharya-actions');
+        const st = document.getElementById('brahmacharya-status');
+        if(chk==='yes') { act.style.display='none'; st.style.display='block'; st.innerText="✨ Pure Today"; st.style.color="var(--peacock-green)"; }
+        else if(chk==='no') { act.style.display='none'; st.style.display='block'; st.innerText="⚠️ Relapsed"; st.style.color="red"; }
+        else { act.style.display='block'; st.style.display='none'; }
+    }
+    function confirmBrahmacharya(success) {
+        const k = formatDateKey(currentDate);
+        if(success) { localStorage.setItem('brahmacharya_check_'+k, 'yes'); if(!localStorage.getItem('brahmacharya_start')) localStorage.setItem('brahmacharya_start', new Date().toISOString()); } 
+        else { if(!confirm("Reset streak?")) return; localStorage.setItem('brahmacharya_check_'+k, 'no'); localStorage.setItem('brahmacharya_start', new Date().toISOString()); }
+        updateBrahmacharyaUI();
+    }
+
+    function saveReflection(id){localStorage.setItem(`reflection_${formatDateKey(currentDate)}_${id}`, document.getElementById(id).value);}
+    function loadReflections(){document.getElementById('learning').value=localStorage.getItem(`reflection_${formatDateKey(currentDate)}_learning`)||'';}
+
+    // START
+    initFirebase(); 
+</script>
 </body>
 </html>
