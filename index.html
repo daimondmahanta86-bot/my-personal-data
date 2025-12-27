@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mera Personal Data App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; background-color: #f0f2f5; }
+        h2 { color: #333; text-align: center; }
+        textarea { 
+            width: 100%; height: 200px; padding: 15px; font-size: 16px; 
+            border: 1px solid #ccc; border-radius: 8px; resize: none;
+            font-family: inherit; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button { 
+            display: block; width: 100%; margin-top: 15px; padding: 12px; 
+            font-size: 18px; font-weight: bold; cursor: pointer; 
+            background-color: #007bff; color: white; border: none; border-radius: 8px; 
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #0056b3; }
+        #status { text-align: center; margin-top: 15px; font-weight: bold; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>📝 Mera Safe Data</h2>
+    
+    <textarea id="myInput" placeholder="Data load ho raha hai..."></textarea>
+    
+    <button onclick="saveData()">Update & Save Data</button>
+    
+    <p id="status"></p>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // ----------------------------------------------------
+        // AAPKA PERSONAL CONFIG CODE (Maine image se le liya hai)
+        // ----------------------------------------------------
+        var firebaseConfig = {
+            apiKey: "AIzaSyCLD87imksmQI2uENX4PVRDcnun3WxTdbk",
+            authDomain: "mera-personal-data.firebaseapp.com",
+            databaseURL: "https://mera-personal-data-default-rtdb.firebaseio.com",
+            projectId: "mera-personal-data",
+            storageBucket: "mera-personal-data.firebasestorage.app",
+            messagingSenderId: "304579476606",
+            appId: "1:304579476606:web:8fa78fee9cbe2f301f2c2f"
+        };
+        // ----------------------------------------------------
+
+        // Firebase Start Karna
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+
+        // 1. PAGE KHULTE HI DATA LANA (Read)
+        var dataRef = database.ref('mera_text');
+        
+        dataRef.on('value', (snapshot) => {
+            var data = snapshot.val();
+            if(data) {
+                document.getElementById('myInput').value = data;
+                document.getElementById('status').style.color = "blue";
+                document.getElementById('status').innerText = "Cloud se data aa gaya!";
+            } else {
+                document.getElementById('myInput').placeholder = "Yahan kuch likhein aur Save dabayein...";
+                document.getElementById('status').innerText = "";
+            }
+        });
+
+        // 2. BUTTON DABANE PAR DATA SAVE KARNA (Write)
+        function saveData() {
+            var text = document.getElementById('myInput').value;
+            document.getElementById('status').innerText = "Saving...";
+            
+            dataRef.set(text, (error) => {
+                if (error) {
+                    alert("Galti ho gayi: " + error.message);
+                } else {
+                    document.getElementById('status').style.color = "green";
+                    document.getElementById('status').innerText = "✅ Data Save Ho Gaya!";
+                    
+                    // 3 second baad message hata do
+                    setTimeout(() => { 
+                        document.getElementById('status').innerText = ""; 
+                    }, 3000);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
